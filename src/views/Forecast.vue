@@ -9,37 +9,24 @@
     <ul v-if="weatherData && errors.length===0" class="forecast">
       <li v-for="(forecast,index) in weatherData.list" :key="index">
         <h3>{{ forecast.dt|formatDate }}</h3>
-        <!-- TODO: Make weather summary be in a child component. -->
-        <div v-for="(weatherSummary,index) in forecast.weather" :key="index" class="weatherSummary">
-            <img v-bind:src="'http://openweathermap.org/img/w/' + weatherSummary.icon + '.png'" v-bind:alt="weatherSummary.main">
-            <br>
-            <b>{{ weatherSummary.main }}</b>
-        </div>
-        <!-- TODO: Make dl of weather data be in a child component. -->
-        <dl>
-            <dt>Humidity</dt>
-            <dd>{{ forecast.main.humidity }}%</dd>
-            <dt>High</dt>
-            <dd>{{ forecast.main.temp_max }}&deg;F</dd>
-            <dt>Low</dt>
-            <dd>{{ forecast.main.temp_min }}&deg;F</dd>
-        </dl>
+        
+        <weather-summary v-bind:weatherData="forecast.weather"></weather-summary>
+
+        <weather-conditions v-bind:conditions="forecast.main"></weather-conditions>
+
       </li>
     </ul>
-    <div v-else-if="errors.length > 0">
-      <h2>There was an error fetching weather data.</h2>
-      <ul class="errors">
-        <li v-for="(error,index) in errors" :key="index">{{ error }}</li>
-      </ul>
-    </div>
-    <div v-else>
-      <h2>Loading...</h2>
-    </div>
+    <error-list v-bind:errorList="errors"></error-list>
+
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import {API} from '@/common/api';
+import WeatherSummary from '@/components/WeatherSummary';
+import WeatherConditions from '@/components/WeatherConditions';
+import ErrorList from '@/components/ErrorList';
 
 export default {
   name: 'Forecast',
@@ -51,14 +38,13 @@ export default {
     }
   },
   created () {
-    // TODO: Improve base config for API
-    axios.get('//api.openweathermap.org/data/2.5/forecast', {
+    
+    API.get('forecast', {
       params: {
           id: this.$route.params.cityId,
-          units: 'imperial',
-          APPID: 'YOUR_APPID_HERE'
       }
     })
+    
     .then(response => {
       this.weatherData = response.data
     })
@@ -88,6 +74,11 @@ export default {
       //let year = date.getFullYear();
       return `${ months[month] } ${ daynum } @ ${ hour }`;
     }
+  },
+  components: {
+    'weather-summary': WeatherSummary,
+    'weather-conditions': WeatherConditions,
+    'error-list': ErrorList
   }
 }
 </script>
